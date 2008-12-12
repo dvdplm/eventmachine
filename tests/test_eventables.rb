@@ -27,9 +27,10 @@
 $:.unshift "../lib"
 require 'eventmachine'
 
-require 'test/unit/testsuite'
-require 'test/unit/ui/console/testrunner'
-
+if RUBY_VERSION < '1.9.1'
+  require 'test/unit/testsuite'
+  require 'test/unit/ui/console/testrunner'
+end
 
 class TestEventables < Test::Unit::TestCase
 

@@ -38,6 +38,12 @@ Dir.glob('tasks/*.rake').each { |r| Rake.application.add_import r }
 $eventmachine_library = :java if RUBY_PLATFORM =~ /java/ || ENV['EVENTMACHINE_LIBRARY'] == 'java'
 $eventmachine_library = :pure_ruby if ENV['EVENTMACHINE_LIBRARY'] == 'pure_ruby'
 
+MAKE = ENV['MAKE'] || if RUBY_PLATFORM =~ /mswin/ # mingw uses make.
+  'nmake'
+else
+  'make'
+end
+
 # If running under rubygems...
 __DIR__ ||= File.expand_path(File.dirname(__FILE__))
 if Gem.path.any? {|path| %r(^#{Regexp.escape path}) =~ __DIR__}
@@ -50,7 +56,7 @@ end
 desc ":default build when running under rubygems."
 task :gem_build => :build
 
-desc "Build extension (or EVENTMACHIINE_LIBRARY) and place in lib"
+desc "Build extension (or EVENTMACHINE_LIBRARY) and place in lib"
 build_task = 'ext:build'
 build_task = 'java:build' if $eventmachine_library == :java
 build_task = :dummy_build if $eventmachine_library == :pure_ruby
@@ -65,7 +71,7 @@ task :dummy_build
 # Basic clean definition, this is enhanced by imports aswell.
 task :clean do
   chdir 'ext' do
-    sh 'make clean' if test ?e, 'Makefile'
+    sh "#{MAKE} clean" if test ?e, 'Makefile'
   end
   Dir.glob('**/Makefile').each { |file| rm file }
   Dir.glob('**/*.{o,so,bundle,class,jar,dll,log}').each { |file| rm file }
@@ -84,7 +90,10 @@ Spec = Gem::Specification.new do |s|
 
   s.require_path      = 'lib'
 
-  s.test_file         = "tests/testem.rb"
+  # TODO / XXX - should we enable this? rubygems fails the install if anything 
+  # is broken. What we could do is CI submission, though, and always terminate
+  # with a positive code...
+  # s.test_file         = "tests/testem.rb"
   s.extensions        = "Rakefile"
 
   s.author            = "Francis Cianfrocca"
@@ -118,7 +127,7 @@ namespace :ext do
   desc "make extension"
   task :make => [:makefile] do
     chdir 'ext' do
-      sh 'make'
+      sh MAKE
     end
   end
 
