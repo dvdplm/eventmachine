@@ -15,4 +15,5 @@ lib/*.jar
 java/src/com/rubyeventmachine/*.class
 
 ext/*.o
+ext/conftest.dSYM
 **/*.log
